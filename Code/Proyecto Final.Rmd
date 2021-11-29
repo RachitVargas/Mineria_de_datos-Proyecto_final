@@ -36,9 +36,22 @@ library(data.table)
 
 ```{r message=FALSE}
 
-file <- "/Users/antony.vargasulead.ac.cr/Mineria de datos/Proyecto Final/Data/winequality-red.csv"
-df <- read.csv(file, sep = ";", dec = ".")
+file <- "/Users/antony.vargasulead.ac.cr/Mineria de datos/Proyecto Final/Data/heart.csv"
+df <- read.csv(file, sep = ",", dec = ".")
+df <- df[,!(names(df) %in% "target")]
 DT::datatable(df)
 
 ```
+
+
+
+## Análisis descriptivo
+
+```{r}
+
+
+
+```
+
+
 
