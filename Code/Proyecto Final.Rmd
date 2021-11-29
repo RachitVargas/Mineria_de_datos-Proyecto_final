@@ -1,0 +1,40 @@
+---
+title: "Mineria de datos - Proyecto Final "
+author: "Verónica Ferreto, Kevin Gamboa, Melissa Pérez y Rachit Vargas"
+date: "11/28/2021"
+output: rmdformats::readthedown
+---
+
+# Librerías
+
+```{r message=FALSE}
+library(tidyverse)
+library(rmdformats)
+library(stats)
+library(cluster)
+library(mclust)
+library(factoextra)
+library(dendextend)
+library(DT)
+library(purrr)
+library(igraph)
+library(tidygraph)
+library(ggraph)
+library(ggpubr)
+library(clustertend)
+library(fpc)
+library(FactoMineR)
+library(factoextra)
+library(pvclust)
+library(cluster.datasets)
+```
+
+
+# Datos 
+
+```{r message=FALSE}
+file = "/Users/antony.vargasulead.ac.cr/Mineria de datos/Proyecto Final/Data/ObesityDataSet_raw_and_data_sinthetic.csv"
+df <- read_delim(file, delim = ";", escape_double = FALSE, trim_ws = TRUE)
+DT::datatable(df)
+```
+
