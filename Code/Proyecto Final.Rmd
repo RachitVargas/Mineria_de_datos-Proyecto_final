@@ -36,7 +36,7 @@ library(data.table)
 
 ```{r message=FALSE}
 
-file <- "/Users/antony.vargasulead.ac.cr/Mineria de datos/Proyecto Final/Data/heart.csv"
+file <- "/Users/antony.vargasulead.ac.cr/Mineria de datos/Proyecto Final/Data/Heart.csv"
 df <- read.csv(file, sep = ",", dec = ".")
 df <- df[,!(names(df) %in% "target")]
 DT::datatable(df)
@@ -45,13 +45,237 @@ DT::datatable(df)
 
 
 
-## Análisis descriptivo
+## 2. Análisis descriptivo
 
 ```{r}
 
 
+```
+
+
+## 3. Análisis no Supervisado:
+
+### 3.1 Análisis de componentes principales
+
+```{r}
+
+PCA <- PCA(df, graph = FALSE, dim(df)[2])
+PCA
 
 ```
 
+#### 3.1.1 Tabla general
+
+```{r}
+eig.tmp <- PCA$eig
+
+eig.tmp[,2:3]<-eig.tmp[,2:3]/100.
+
+DT::datatable(eig.tmp) %>% 
+  formatRound('eigenvalue',2) %>% 
+  formatPercentage(c('percentage of variance','cumulative percentage of variance'),2)
+
+```
+### 3.1.2 Gráfico de sedimentación
+
+```{r}
+
+ggplot(data = data.frame(prop_varianza_acum = PCA$eig[,3], pc = 1:dim(PCA$eig)[1]),
+       aes(x = pc, y = prop_varianza_acum, group = 1)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  labs(x = "Componente principal",
+       y = "Prop. varianza explicada acumulada")
+
+```
+
+### 3.1.3 Tabla de cosenos cuadrados - individuos
+
+```{r}
+
+DT::datatable(PCA$ind$cos2) %>%
+  formatPercentage(colnames(PCA$ind$cos2),2)
+
+```
+### 3.1.4 Tabla de contribuciones - individuos
+
+```{r}
+
+DT::datatable(PCA$ind$contrib) %>% 
+  formatRound(colnames(PCA$ind$contrib),3)
+
+```
+
+
+### 3.1.5 Tabla de cosenos cuadrados - variables
+
+```{r}
+
+DT::datatable(PCA$var$cos2) %>% 
+  formatPercentage(colnames(PCA$var$cos2),2)
+
+```
+
+### 3.1.6 Tabla de contribuciones - variables
+
+```{r}
+
+DT::datatable(PCA$var$contrib) %>% 
+  formatRound(colnames(PCA$var$contrib),3)
+
+```
+
+### 3.1.7 Plano principal - Cosenos cuadrados de individuos
+
+```{r}
+
+fviz_pca_ind(PCA, col.ind="cos2", geom = "point",
+   gradient.cols = c("black", "#2E9FDF", "#FC4E07" ), title  = "Cosenos cuadrados - individuos")
+
+```
+
+
+### 3.1.8 Plano principal - Contribución de individuos
+
+```{r}
+
+fviz_pca_ind(PCA, col.ind="contrib", geom = "point",
+   gradient.cols = c("black", "#2E9FDF", "#FC4E07" ), title  = "Ejemplo 1 Contribución",repel = TRUE)
+
+```
+
+
+
+### 3.1.9 Cículo de correlación - Cosenos cuadrados individuos
+
+```{r}
+
+fviz_pca_var(PCA, col.var = "cos2",
+   gradient.cols = c("black", "blue", "red"),
+   ggtheme = theme_minimal())
+
+```
+
+### 3.1.10 Cículo de correlación - Contribución individuos
+
+```{r}
+
+fviz_pca_var(PCA, col.var = "contrib",
+   gradient.cols = c("black", "blue", "red"),
+   ggtheme = theme_minimal())
+
+```
+### 3.1.11 Correlación entre variables originales y los componentes principales
+
+```{r}
+
+library(corrplot)
+corrplot(PCA$var$cor)
+
+```
+
+
+## 3.2 Análisis de correspondencia simple 
+
+### 3.2.1 Aplicación del Análisis de correspondencia simple (ACS)
+
+```{r}
+
+ACS <- CA(df, graph = TRUE, dim(df)[2])
+
+```
+
+
+### 3.2.2 Valores propios - inercia explicada
+
+```{r}
+
+fviz_eig(ACS, linecolor = "#FC4E07", 
+         barcolor = "#00AFBB", barfill = "#00AFBB")
+
+```
+
+### 3.2.3 Plano principal - Cosenos cuadrados de individuos
+
+```{r}
+
+fviz_ca_row(ACS, select.row = list(cos2 = 0.80), col.row = "cos2",
+            gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+            repel = TRUE)
+
+```
+
+### 3.2.4 Plano principal - Cosenos cuadrado de variables
+
+```{r}
+
+fviz_ca_col(ACS, col.col = "cos2", 
+            gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+
+```
+
+### 3.2.4 Gráfico de sobreposición
+
+```{r}
+
+fviz_ca_biplot(ACS, select.row = list(cos2 = 0.80), repel = TRUE)
+
+```
+
+## 3.4 Sentido de la clusterización en el problema
+
+```{r}
+set.seed(321)
+df_scale <- scale(df, center = TRUE, scale = TRUE)
+# Estadístico H para el set de datos iris
+hopkins(data = df_scale, n = nrow(df_scale) - 1)
+```
+
+No tiene mucho sentido la clusterización de este problema, ya que el índice de Hopkins da un resultado de 32.3%, superior al 25%, el cual indica que no tiene mucho sentido realizar la clusterización. Un resultado cercano al 50% indica que del todo no se puede clusterizar y el índice se hacer a ese porcentaje
+
+
+## 3.5 Clusterización
+
+### 3.5.1 Kmeans
+
+```{r}
+
+km.datos <- kmeans(x = df_scale, centers = 5)
+
+p1 <- fviz_cluster(object = km.datos, data = df_scale,
+                   ellipse.type = "norm", geom = "point", main = "Datos iris",
+                   stand = FALSE, palette = "jco") +
+  theme_bw() + theme(legend.position = "none")
+
+p1
+
+```
+
+### 3.5.2 Clustering jerárquico
+
+```{r}
+
+hc <- hclust(d = dist(x = df_scale, method = "euclidean"),
+                               method = "complete")
+
+fviz_dend(x = hc, k = 5, cex = 0.6) +
+  labs(title = "Herarchical clustering",
+       subtitle = "Distancia euclídea, Lincage complete, K=2")
+
+```
+
+## 3.6 Número óptimo de k clúster
+
+```{r}
+
+jambu <- fviz_nbclust(x = df_scale, FUNcluster = kmeans, method = "wss", k.max = 15, 
+             diss = get_dist(df_scale, method = "euclidean"), nstart = 50)
+
+jambu
+
+```
+
+Es difícil determinar la cantidad k óptima de clúster, ya que en el Codo de Jambú se nota que la línea no se lográ estabilizarse, sin embargo a criterio, podemos determinar que el mejor número es k = 5, sin embargo no se sabe con certeza.
 
 
