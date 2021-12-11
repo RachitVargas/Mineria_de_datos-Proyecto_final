@@ -29,10 +29,10 @@ library(pvclust)
 library(cluster.datasets)
 library(mltools)
 library(data.table)
+library(corrplot)
 ```
 
-
-# Datos 
+# Datos
 
 ```{r message=FALSE}
 
@@ -44,14 +44,156 @@ DT::datatable(df)
 ```
 
 
-
 ## 2. Análisis descriptivo
+### 2.1 Datos cualitativos
 
 ```{r}
 
+df_cualitativo <- df[, c("age", "trestbps", "chol", "thalach", "oldpeak")]
+head(df_cualitativo)
 
 ```
 
+### 2.2 Resumen
+
+```{r}
+
+print("Resumen estadistico")
+summary(df_cualitativo)
+
+```
+
+
+### 2.3 Desviaciones estándar
+
+```{r}
+
+for (i in colnames(df_cualitativo)){
+  print(i)
+  print((sd(df[, i])))
+}
+
+```
+
+### 2.4 Cuartiles en diagrama de cajas
+
+1. boxplot() es una función que nos ayuda a crear un gráfico caja o una caja de bigotes. 
+
+2. Además, representa gráficamente una serie de datos numéricos a través de sus cuartiles. De esta manera, el diagrama de caja muestra a simple vista la mediana y los cuartiles de los datos. También puede representar los valores atípicos de estos.
+
+
+```{r}
+par(mfrow=c(2,3))
+
+boxplot(df_cualitativo$age,
+        main = "Boxplot - Age",
+        ylab = "Age",
+        col = "orange",
+        border = "brown",
+        horizontal = FALSE,
+        notch = TRUE)
+
+boxplot(df_cualitativo$trestbps,
+        main = "Boxplot - Trestbps",
+        ylab = "Trestbps",
+        col = "orange",
+        border = "brown",
+        horizontal = FALSE,
+        notch = TRUE)
+
+boxplot(df_cualitativo$chol,
+        main = "Boxplot - Chol",
+        ylab = "Chol",
+        col = "orange",
+        border = "brown",
+        horizontal = FALSE,
+        notch = TRUE)
+
+
+boxplot(df_cualitativo$thalach,
+        main = "Boxplot - Thalach",
+        ylab = "thalach",
+        col = "orange",
+        border = "brown",
+        horizontal = FALSE,
+        notch = TRUE)
+
+boxplot(df_cualitativo$oldpeak,
+        main = "Boxplot - Oldpeak",
+        ylab = "Oldpeak",
+        col = "orange",
+        border = "brown",
+        horizontal = FALSE,
+        notch = TRUE)
+
+```
+
+### 2.5 Diagramas de frecuencia
+
+```{r}
+par(mfrow=c(2,3))
+
+hist(x = df_cualitativo$age, main = "Histograma de Edad", 
+     xlab = "Edad", ylab = "Frecuencia",
+     col = "purple")
+
+hist(x = df_cualitativo$trestbps, main = "Histograma de Presión arterial", 
+     xlab = "Presión arterial", ylab = "Frecuencia",
+     col = "purple")
+
+hist(x = df_cualitativo$chol, main = "Histograma de Colesterol", 
+     xlab = "Colesterol", ylab = "Frecuencia",
+     col = "purple")
+
+hist(x = df_cualitativo$thalach, main = "Histograma de Cardíaca máxima", 
+     xlab = "Cardíaca máxima", ylab = "Frecuencia",
+     col = "purple")
+
+hist(x = df_cualitativo$oldpeak, main = "Histograma de Depresión del ST", 
+     xlab = "Depresión del ST", ylab = "Frecuencia",
+     col = "purple")
+```
+
+### 2.6 Relación entre las variables y sus correlaciones
+
+Análisis de correlación de variables 
+
+Introducción 
+La correlación es un tipo de asociación entre dos variables numéricas, específicamente evalúa la tendencia (creciente o decreciente) en los datos.
+
+El signo nos indica la dirección de la relación, como hemos visto en el diagrama de dispersión. Un valor positivo indica una relación, directa o positiva, un valor negativo indica relación indirecta, inversa o negativa,un valor nulo indica que no existe una tendencia entre ambas variables (puede ocurrir que no exista relación o que la relación sea más compleja que una tendencia, por ejemplo, una relación en forma de U).
+
+
+2. Correlación gráfica entre todas las variables:
+
+La función pairs nos permite cruzar todas las variables del dataset a modo de tabla donde el eje x de una gráfica corresponde a la columna donde se encuentra y el eje y a la fila.
+
+Cuando vemos que los puntos parecen ir de manera descendente, nos indica que hay una correlación negativa, cuando parecen ir de manera ascendente, esto nos indica una correlación positiva.  
+
+```{r, message=FALSE}
+library("ggplot2")
+library("GGally")
+ggpairs(df_cualitativo)
+```
+
+### 2.7 Correlaciones entre las variables
+
+La función cor nos retorna la correlación entre los datos. Recordemos que el valor de una correlación va de -1 a 1, si se acerca a 0 no hay correlación.
+
+Si se usa 'hclust', corrplot() puede dibujar rectángulos alrededor del gráfico de la matriz de correlación en función de los resultados del agrupamiento jerárquico.
+
+```{r}
+
+correlacion <- cor(df_cualitativo)
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(correlacion, method="color", col=col(200),  
+         type="upper", order="hclust", 
+         addCoef.col = "black",
+         tl.col="black", tl.srt=45,
+         diag=FALSE)
+
+```
+Ninguna de las variables tienen correlación fuerte positiva o negativa. Todas las relaciones son débiles, por lo que las variables no tiene relación directa entre ellas.
 
 ## 3. Análisis no Supervisado:
 
@@ -200,7 +342,7 @@ fviz_eig(ACS, linecolor = "#FC4E07",
 
 ```{r}
 
-fviz_ca_row(ACS, select.row = list(cos2 = 0.80), col.row = "cos2",
+fviz_ca_row(ACS, select.row = list(cos2 = 0.60), col.row = "cos2", geom = "point",
             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
             repel = TRUE)
 
