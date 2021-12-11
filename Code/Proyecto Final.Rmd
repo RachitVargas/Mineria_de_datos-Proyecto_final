@@ -130,7 +130,7 @@ DT::datatable(PCA$var$contrib) %>%
 
 ```{r}
 
-fviz_pca_ind(PCA, col.ind="cos2", geom = "point",
+fviz_pca_ind(PCA, col.ind="cos2", select.ind = list(cos2 = 0.60), geom = "point",
    gradient.cols = c("black", "#2E9FDF", "#FC4E07" ), title  = "Cosenos cuadrados - individuos")
 
 ```
@@ -228,7 +228,7 @@ fviz_ca_biplot(ACS, select.row = list(cos2 = 0.80), repel = TRUE)
 ```{r}
 set.seed(321)
 df_scale <- scale(df, center = TRUE, scale = TRUE)
-# Estadístico H para el set de datos iris
+
 hopkins(data = df_scale, n = nrow(df_scale) - 1)
 ```
 
@@ -277,5 +277,22 @@ jambu
 ```
 
 Es difícil determinar la cantidad k óptima de clúster, ya que en el Codo de Jambú se nota que la línea no se lográ estabilizarse, sin embargo a criterio, podemos determinar que el mejor número es k = 5, sin embargo no se sabe con certeza.
+
+
+## 3.7 Indicadores para la evaluación de los clústeres
+
+### 3.7.1 Visual Assessment of cluster Tendency (VAT)
+
+```{r}
+
+dist_data <- dist(df_scale, method = "euclidean")
+
+p2 <- fviz_dist(dist.obj = dist_data, show_labels = FALSE) +
+      labs(title = "Datos - Heart") + theme(legend.position = "bottom")
+
+p2
+```
+
+
 
 
